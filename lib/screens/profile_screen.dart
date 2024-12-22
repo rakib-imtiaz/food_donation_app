@@ -12,6 +12,9 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _bioController = TextEditingController();
   bool _isEditing = false;
 
   @override
@@ -28,6 +31,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   await AuthService.updateProfile(
                     name: _nameController.text,
                     location: _locationController.text,
+                    phone: _phoneController.text,
+                    address: _addressController.text,
+                    bio: _bioController.text,
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Profile updated!')),
@@ -42,6 +48,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _isEditing = !_isEditing;
               });
             },
+          ),
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete Account'),
+                  textColor: Colors.red,
+                  iconColor: Colors.red,
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Account'),
+                      content: const Text(
+                        'Are you sure? This action cannot be undone.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            try {
+                              await AuthService.deleteAccount();
+                              if (mounted) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -61,6 +120,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (!_isEditing) {
             _nameController.text = userData['name'] ?? '';
             _locationController.text = userData['location'] ?? '';
+            _phoneController.text = userData['phone'] ?? '';
+            _addressController.text = userData['address'] ?? '';
+            _bioController.text = userData['bio'] ?? '';
           }
 
           return ListView(
@@ -72,42 +134,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Icon(Icons.person, size: 50, color: Colors.white),
               ),
               const SizedBox(height: 16),
-              _isEditing
-                  ? TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
-                      ),
-                    )
-                  : Text(
-                      userData['name'] ?? 'No Name',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-              const SizedBox(height: 32),
+              _buildEditableField(
+                controller: _nameController,
+                label: 'Name',
+                icon: Icons.person,
+                value: userData['name'],
+              ),
+              const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.email),
                 title: const Text('Email'),
                 subtitle: Text(userData['email'] ?? 'No Email'),
               ),
               const SizedBox(height: 16),
-              _isEditing
-                  ? TextField(
-                      controller: _locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location',
-                        border: OutlineInputBorder(),
-                      ),
-                    )
-                  : ListTile(
-                      leading: const Icon(Icons.location_on),
-                      title: const Text('Location'),
-                      subtitle: Text(userData['location'] ?? 'No Location'),
-                    ),
+              _buildEditableField(
+                controller: _locationController,
+                label: 'Location',
+                icon: Icons.location_on,
+                value: userData['location'],
+              ),
+              const SizedBox(height: 16),
+              _buildEditableField(
+                controller: _phoneController,
+                label: 'Phone',
+                icon: Icons.phone,
+                value: userData['phone'],
+              ),
+              const SizedBox(height: 16),
+              _buildEditableField(
+                controller: _addressController,
+                label: 'Address',
+                icon: Icons.home,
+                value: userData['address'],
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              _buildEditableField(
+                controller: _bioController,
+                label: 'Bio',
+                icon: Icons.info,
+                value: userData['bio'],
+                maxLines: 3,
+              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
@@ -132,4 +200,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-} 
+
+  Widget _buildEditableField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String? value,
+    int maxLines = 1,
+  }) {
+    return _isEditing
+        ? TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              border: const OutlineInputBorder(),
+              prefixIcon: Icon(icon),
+            ),
+            maxLines: maxLines,
+          )
+        : ListTile(
+            leading: Icon(icon),
+            title: Text(label),
+            subtitle: Text(value ?? 'Not set'),
+          );
+  }
+}

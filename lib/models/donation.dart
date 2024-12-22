@@ -17,7 +17,6 @@ class Donation {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'foodName': foodName,
       'description': description,
       'quantity': quantity,
@@ -28,12 +27,12 @@ class Donation {
 
   factory Donation.fromMap(Map<String, dynamic> map) {
     return Donation(
-      id: map['id'],
-      foodName: map['foodName'],
-      description: map['description'],
-      quantity: map['quantity'],
-      location: map['location'],
-      pickupTime: map['pickupTime'],
+      id: map['id'] ?? '',
+      foodName: map['foodName'] ?? '',
+      description: map['description'] ?? '',
+      quantity: map['quantity']?.toInt() ?? 0,
+      location: map['location'] ?? '',
+      pickupTime: map['pickupTime'] ?? '',
     );
   }
 } 

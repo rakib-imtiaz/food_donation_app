@@ -14,9 +14,11 @@ class FirebaseService {
         .collection(_collection)
         .orderBy('pickupTime', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Donation.fromMap(doc.data()))
-            .toList());
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return Donation.fromMap(data);
+            }).toList());
   }
 
   static Future<void> deleteDonation(String id) async {

@@ -52,12 +52,19 @@ class AuthService {
   static Future<void> updateProfile({
     required String name,
     required String location,
+    String? phone,
+    String? address,
+    String? bio,
   }) async {
     try {
       String uid = currentUser!.uid;
       await _db.collection('users').doc(uid).update({
         'name': name,
         'location': location,
+        'phone': phone,
+        'address': address,
+        'bio': bio,
+        'updatedAt': DateTime.now(),
       });
     } catch (e) {
       rethrow;
@@ -68,5 +75,18 @@ class AuthService {
   static Stream<DocumentSnapshot> getUserProfile() {
     String uid = currentUser!.uid;
     return _db.collection('users').doc(uid).snapshots();
+  }
+
+  // Delete Account
+  static Future<void> deleteAccount() async {
+    try {
+      String uid = currentUser!.uid;
+      // Delete user data from Firestore
+      await _db.collection('users').doc(uid).delete();
+      // Delete user authentication
+      await currentUser!.delete();
+    } catch (e) {
+      rethrow;
+    }
   }
 } 
